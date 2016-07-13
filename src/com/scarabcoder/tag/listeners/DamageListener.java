@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 import com.scarabcoder.tag.game.GameManager;
 
@@ -19,6 +20,18 @@ public class DamageListener implements Listener {
 					GameManager.getPlayerGame(p).playerDamageByPlayerEvent(p1, p);
 					e.setCancelled(true);
 					
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void playerDamageEvent(EntityDamageEvent e){
+		if(e.getEntity() instanceof Player){
+			Player p = (Player) e.getEntity();
+			if(GameManager.isPlayerInGame(p)){
+				if(e.getCause().equals(DamageCause.FALL) || (e.getCause().equals(DamageCause.SUFFOCATION))){
+					e.setCancelled(true);
 				}
 			}
 		}

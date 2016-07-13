@@ -14,6 +14,8 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import com.scarabcoder.tag.Main;
 import com.scarabcoder.tag.enums.GameMode;
@@ -36,21 +38,23 @@ public class Game {
 	
 	private int max;
 	
+	@SuppressWarnings("unused")
 	private int time = 0;
 	
+	@SuppressWarnings("unused")
 	private int endTime;
 	
 	private int startTime;
 	
 	private String id;
 	
-	private int counter = 21;
+	private int counter;
 	
 	private GameStatus status;
 	
 	private int startPlayers;
 	
-	private void addSpawn(int x, int y, int z){
+	public void addSpawn(int x, int y, int z){
 		this.spawns.put(new Location(Bukkit.getWorld(id), x, y, z), false);
 	}
 	
@@ -102,9 +106,11 @@ public class Game {
 					attacker.sendMessage(ChatColor.GOLD + "You tagged " + attacked.getName() + "!");
 					attacker.setHealth(20.0);
 					attacked.sendMessage(ChatColor.GOLD + "You were tagged by " + attacker.getName() + "!");
+					this.sendMessage(attacker.getName() + " tagged " + attacked.getName() + "!");
 					for(String str : this.tagged.keySet()){
 						if(this.tagged.get(str).equals(attacked.getUniqueId().toString())){
 							this.untag(Bukkit.getPlayer(UUID.fromString(str)));
+							this.sendMessage(Bukkit.getPlayer(UUID.fromString(str)).getName() + " is now up!");
 						}
 					}
 					if(this.isTagged(attacker)){
@@ -126,29 +132,32 @@ public class Game {
 		if(this.getGameStatus().equals(GameStatus.WAITING)){
 				if(this.counter > this.startTime){
 					if(this.getPlayersUUIDs().size() >= this.startPlayers){
-						this.sendMessage(ChatColor.GREEN + "Game starting in " + ChatColor.BOLD + "20" + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
+						this.sendMessage(ChatColor.GREEN + "Game starting in " + ChatColor.BOLD + this.startTime + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
 						this.counter = this.startTime;
 					}
 				}if(this.counter < this.startTime + 1){
 					
 					this.counter = this.counter - 1;
-					if(this.counter == 10){
-						for(Player p : this.getPlayers()){
-							p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
+					if(this.counter != 0){
+						if(this.counter % 10 == 0){
+							this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + counter + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
+							for(Player p : this.getPlayers()){
+								p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
+								
+							}
+						}else if(this.counter == 1){
+							for(Player p : this.getPlayers()){
+								p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
+							}
+							this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + "1" + ChatColor.RESET.toString() + ChatColor.GREEN + " second!");
+						}else if(this.counter < 6){
+							this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + counter + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
+							for(Player p : this.getPlayers()){
+								p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
+								
+							}
 						}
-						this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + "10" + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
-					}else if(this.counter < 6 && (counter > 1)){
-						for(Player p : this.getPlayers()){
-							p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
-						}
-						this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + counter + ChatColor.RESET.toString() + ChatColor.GREEN + " seconds!");
-					}else if(this.counter == 1){
-						for(Player p : this.getPlayers()){
-							p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1,1);
-						}
-						this.sendMessage(ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + "1" + ChatColor.RESET.toString() + ChatColor.GREEN + " second!");
-					}
-					if(this.counter == 0){
+					}else{
 						if(this.getPlayersUUIDs().size() >= this.startPlayers){
 							this.setGameStatus(GameStatus.INGAME);
 							for(Player p : this.getPlayers()){
@@ -192,13 +201,11 @@ public class Game {
 		this.max = maxPlayers;
 		this.endTime = endTime;
 		this.id = id;
+		
+		this.startTime = 60;
+		this.counter = this.startTime + 1;
 		this.startPlayers = startPlayers;
 		this.status = GameStatus.WAITING;
-		this.addSpawn(280, 4, 1073);
-		this.addSpawn(295, 4, 1095);
-		this.addSpawn(273, 5, 1107);
-		this.addSpawn(252, 4, 1107);
-		this.addSpawn(249, 5, 1097);
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(), new Runnable(){
 
 			@Override
@@ -248,6 +255,10 @@ public class Game {
 		return players.contains(p.getUniqueId().toString());
 	}
 	
+	public int getMaxPlayers(){
+		return this.max;
+	}
+	
 	public List<String> getPlayersUUIDs(){
 		return this.players;
 	}
@@ -262,6 +273,9 @@ public class Game {
 			this.tagThing.remove(p.getUniqueId().toString());
 			p.getVehicle().remove();
 		}
+		
+		p.removePotionEffect(PotionEffectType.GLOWING);
+		p.removePotionEffect(PotionEffectType.NIGHT_VISION);
 		
 		this.players.remove(p.getUniqueId().toString());
 		
@@ -285,30 +299,36 @@ public class Game {
 	}
 	
 	public void addPlayer(Player p){
-		if(this.players.size() + 1 != this.max){
-			if(this.counter < 21){
-				p.sendMessage(ChatColor.RESET + "[" + ChatColor.YELLOW + "Banana Tag" + ChatColor.RESET + "] " + ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + counter + ChatColor.RESET + ChatColor.GREEN.toString() + " seconds!");
-			}
-			this.playerData.put(p.getUniqueId().toString(), new PlayerData(p.getLocation(), p.getTotalExperience(), p.getHealth(), p.getFoodLevel(), p.getInventory(), p.getGameMode()));
-			
-			if(this.status.equals(GameStatus.WAITING)){
-				p.teleport(this.getClaimSpawn());
-				gamemodes.put(p.getUniqueId().toString(), GameMode.PLAYER);
-				p.setGameMode(org.bukkit.GameMode.ADVENTURE);
+		if(this.getGameStatus().equals(GameStatus.WAITING)){
+			if(this.players.size() + 1 <= this.max){
+				if(this.counter < this.startTime){
+					p.sendMessage(ChatColor.RESET + "[" + ChatColor.YELLOW + "Banana Tag" + ChatColor.RESET + "] " + ChatColor.GREEN + "Game starts in " + ChatColor.BOLD + counter + ChatColor.RESET + ChatColor.GREEN.toString() + " seconds!");
+				}
+				this.playerData.put(p.getUniqueId().toString(), new PlayerData(p.getLocation(), p.getTotalExperience(), p.getHealth(), p.getFoodLevel(), p.getInventory(), p.getGameMode()));
+				
+				if(this.status.equals(GameStatus.WAITING)){
+					p.teleport(this.getClaimSpawn());
+					gamemodes.put(p.getUniqueId().toString(), GameMode.PLAYER);
+					p.setGameMode(org.bukkit.GameMode.ADVENTURE);
+					p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, Integer.MAX_VALUE, 2));
+					p.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 2));
+				}else{
+					p.teleport(this.getClaimSpawn());
+					p.setGameMode(org.bukkit.GameMode.SPECTATOR);
+					gamemodes.put(p.getUniqueId().toString(), GameMode.SPECTATOR);
+				}
+				this.players.add(p.getUniqueId().toString());
+				this.sendMessage(ChatColor.GREEN + p.getName() + " joined Banana Tag.");
+				p.getInventory().clear();
+				p.updateInventory();
+				p.setTotalExperience(0);
+				p.setHealth(20);
+				p.setFoodLevel(20);
 			}else{
-				p.teleport(this.getClaimSpawn());
-				p.setGameMode(org.bukkit.GameMode.SPECTATOR);
-				gamemodes.put(p.getUniqueId().toString(), GameMode.SPECTATOR);
+				p.sendMessage(ChatColor.RED + "Game full!");
 			}
-			this.players.add(p.getUniqueId().toString());
-			this.sendMessage(ChatColor.GREEN + p.getName() + " joined Banana Tag.");
-			p.getInventory().clear();
-			p.updateInventory();
-			p.setTotalExperience(0);
-			p.setHealth(20);
-			p.setFoodLevel(20);
 		}else{
-			p.sendMessage(ChatColor.RED + "Game full!");
+			p.sendMessage(ChatColor.RED + "Game in progress!");
 		}
 	}
 	
