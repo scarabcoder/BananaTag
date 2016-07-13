@@ -1,0 +1,7 @@
+main: com.scarabcoder.tag.Main
+version: 1.0
+name: BananaTag
+commands:
+    btag:
+        description: BananaTag Main command
+        usage: /btag <args>
