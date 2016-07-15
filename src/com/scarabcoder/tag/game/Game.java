@@ -286,7 +286,7 @@ public class Game {
 	}
 	
 	public void endGame(){
-		this.counter = this.startTime;
+		this.counter = this.startTime + 1;
 		this.setGameStatus(GameStatus.WAITING);
 		this.sendMessage("Game ending!");
 		System.out.println(this.getPlayers().size());
